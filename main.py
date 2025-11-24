@@ -1,11 +1,26 @@
+#
+# Project: Record Weather Data
+# File Name: main.py
+# Author: Jacob Gundlach
+# Last Modified: 11/24/2025
+#
+
+# Handle network requests.
 import requests
+
+# Handle data from OpenWeatherMap API
+# and output to a an Excel spreadsheet.
 import pandas
+
+# Handle time data from OpenWeatherMap API.
 from datetime import datetime
 
+# Config variables
 API_KEY = "78bbc3e46addc45b426224befee59a6c"
-
 LOCATION_LIMIT = 5
 
+# Ask the user for the location that they want.
+# City is required but state and country are not.
 def get_location_from_user():
   city_name = input("Enter a city name: ")
   while (city_name.strip() == ""):
@@ -16,6 +31,8 @@ def get_location_from_user():
 
   return city_name, state_code, country_code
 
+# Query the location API from OpenWeatherMap to convert the 
+# city, state, and country codes to longitude and latitude coordinates.
 def get_location_info():
   city_name, state_code, country_code = get_location_from_user()
   response = requests.get(f"http://api.openweathermap.org/geo/1.0/direct?q={city_name},{state_code},{country_code}&limit={LOCATION_LIMIT}&appid={API_KEY}")
@@ -24,7 +41,6 @@ def get_location_info():
     city_name, state_code, country_code = get_location_from_user()
     response = requests.get(f"http://api.openweathermap.org/geo/1.0/direct?q={city_name},{state_code},{country_code}&limit={LOCATION_LIMIT}&appid={API_KEY}")
 
-  print()
 
   lon = 0
   lat = 0
@@ -33,13 +49,15 @@ def get_location_info():
     lon = location_data["lon"]
     lat = location_data["lat"]
   else:
-    print("Which city do you want?")
+    print()
+    print("Found these locations:")
+
     locations = list()
     index = 0
     for location_json in response.json():
       index += 1
       locations.append(location_json)
-      location_info = location_json["name"] + " " + location_json["country"] + " " + location_json["state"]
+      location_info = location_json["name"] + ", " + location_json["state"] + ", " + location_json["country"]
       print(str(index) + ") " + location_info)
 
     location_idx_str = input("Which location would you like? ")
@@ -54,19 +72,26 @@ def get_location_info():
 
   return lon, lat
 
+# Helper function to handle missing weather data.
 def check_data_exists(data, key):
   if (key in data):
     return data[key]
   else:
-    return "ERROR"
+    return "N/A"
 
+# Helper function to handle missing time data.
 def check_time_exists(data, key):
   if (key in data):
     return str(datetime.fromtimestamp(data[key]))
   else:
     return "ERROR"
 
+# Query the OpenWeatherMap API for the current weather.
+# Needs the longitude and latitude of the wanted location.
 def get_weather_data(lon, lat):
+  print("Getting Weather Data...")
+  print()
+
   response = requests.get(f"https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={API_KEY}")
   response_dict = response.json()
 
@@ -90,17 +115,26 @@ def get_weather_data(lon, lat):
   weather_data["Sunset Time"] = check_time_exists(response_dict["sys"], "sunset")
 
   df = pandas.DataFrame.from_dict(weather_data, orient="index", columns=[response_dict["name"]])
-  print(df)
+  print("Received Weather Data:")
+  print(df.to_string(header=False))
   return df
 
+# Creates an Excel spreadsheet from the given data frame.
+# Gets the name of the spreadsheet from the user.
 def make_spreadsheet(df):
-  df.to_excel("weather-data.xlsx")
+  print("Creating Excel Spreadsheet...")
+  file_name = input("What should the name of the spreadsheet be? ")
+  while (file_name.strip() == ""):
+    file_name = input("Try again. What should the name of the spreadsheet be? ")
 
+  df.to_excel(file_name + ".xlsx")
+  print("Created Excel spreadsheet called " + file_name + " in the current working directory.")
 
 def main():
   lon, lat = get_location_info()
   print()
   df = get_weather_data(lon, lat)
+  print()
   make_spreadsheet(df)
 
 if __name__ == "__main__":

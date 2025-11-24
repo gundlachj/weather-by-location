@@ -1,5 +1,5 @@
 #
-# Project: Record Weather Data
+# Project: Weather By Location
 # File Name: main.py
 # Author: Jacob Gundlach
 # Last Modified: 11/24/2025

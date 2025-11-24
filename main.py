@@ -1,8 +1,6 @@
 import requests
 import pandas
-import openpyxl
 from datetime import datetime
-from contextlib import suppress
 
 API_KEY = "78bbc3e46addc45b426224befee59a6c"
 
@@ -74,28 +72,30 @@ def get_weather_data(lon, lat):
 
   weather_data = {}
 
-  weather_data["description"] = check_data_exists(response_dict["weather"][0], "description")
-  weather_data["temp"] = check_data_exists(response_dict["main"], "temp")
-  weather_data["feels_like"] = check_data_exists(response_dict["main"], "feels_like")
-  weather_data["temp_min"] = check_data_exists(response_dict["main"], "temp_min")
-  weather_data["temp_max"] = check_data_exists(response_dict["main"], "temp_max")
-  weather_data["pressure"] = check_data_exists(response_dict["main"], "pressure")
-  weather_data["humidity"] = check_data_exists(response_dict["main"], "humidity")
-  weather_data["sea_level"] = check_data_exists(response_dict["main"], "sea_level")
-  weather_data["grnd_level"] = check_data_exists(response_dict["main"], "grnd_level")
-  weather_data["visibility"] = check_data_exists(response_dict, "visibility")
-  weather_data["wind_speed"] = check_data_exists(response_dict["wind"], "speed")
-  weather_data["wind_deg"] = check_data_exists(response_dict["wind"], "deg")
-  weather_data["wind_gust"] = check_data_exists(response_dict["wind"], "gust")
-  weather_data["current_time"] = check_time_exists(response_dict, "dt")
-  weather_data["sunrise"] = check_time_exists(response_dict["sys"], "sunrise")
-  weather_data["sunset"] = check_time_exists(response_dict["sys"], "sunset")
+  weather_data["Description"] = check_data_exists(response_dict["weather"][0], "description")
+  weather_data["Temperature"] = check_data_exists(response_dict["main"], "temp")
+  weather_data["Feels Like"] = check_data_exists(response_dict["main"], "feels_like")
+  weather_data["Min Temp"] = check_data_exists(response_dict["main"], "temp_min")
+  weather_data["Max Temp"] = check_data_exists(response_dict["main"], "temp_max")
+  weather_data["Pressure"] = check_data_exists(response_dict["main"], "pressure")
+  weather_data["Humidity"] = check_data_exists(response_dict["main"], "humidity")
+  weather_data["Sea Level Altitude"] = check_data_exists(response_dict["main"], "sea_level")
+  weather_data["Ground Level Altitude"] = check_data_exists(response_dict["main"], "grnd_level")
+  weather_data["Visibility"] = check_data_exists(response_dict, "visibility")
+  weather_data["Wind Speed"] = check_data_exists(response_dict["wind"], "speed")
+  weather_data["Wind Deg"] = check_data_exists(response_dict["wind"], "deg")
+  weather_data["Wind Gust"] = check_data_exists(response_dict["wind"], "gust")
+  weather_data["Current Time"] = check_time_exists(response_dict, "dt")
+  weather_data["Sunrise Time"] = check_time_exists(response_dict["sys"], "sunrise")
+  weather_data["Sunset Time"] = check_time_exists(response_dict["sys"], "sunset")
 
   df = pandas.DataFrame.from_dict(weather_data, orient="index", columns=[response_dict["name"]])
+  print(df)
   return df
 
 def make_spreadsheet(df):
-  print(df)
+  df.to_excel("weather-data.xlsx")
+
 
 def main():
   lon, lat = get_location_info()

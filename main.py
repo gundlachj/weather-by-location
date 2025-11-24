@@ -1,8 +1,9 @@
 import requests
 import pandas
 import openpyxl
+from datetime import datetime
+from contextlib import suppress
 
-# TODO: Replace with secret token
 API_KEY = "78bbc3e46addc45b426224befee59a6c"
 
 LOCATION_LIMIT = 5
@@ -55,10 +56,52 @@ def get_location_info():
 
   return lon, lat
 
+def check_data_exists(data, key):
+  if (key in data):
+    return data[key]
+  else:
+    return "ERROR"
+
+def check_time_exists(data, key):
+  if (key in data):
+    return str(datetime.fromtimestamp(data[key]))
+  else:
+    return "ERROR"
+
+def get_weather_data(lon, lat):
+  response = requests.get(f"https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={API_KEY}")
+  response_dict = response.json()
+
+  weather_data = {}
+
+  weather_data["description"] = check_data_exists(response_dict["weather"][0], "description")
+  weather_data["temp"] = check_data_exists(response_dict["main"], "temp")
+  weather_data["feels_like"] = check_data_exists(response_dict["main"], "feels_like")
+  weather_data["temp_min"] = check_data_exists(response_dict["main"], "temp_min")
+  weather_data["temp_max"] = check_data_exists(response_dict["main"], "temp_max")
+  weather_data["pressure"] = check_data_exists(response_dict["main"], "pressure")
+  weather_data["humidity"] = check_data_exists(response_dict["main"], "humidity")
+  weather_data["sea_level"] = check_data_exists(response_dict["main"], "sea_level")
+  weather_data["grnd_level"] = check_data_exists(response_dict["main"], "grnd_level")
+  weather_data["visibility"] = check_data_exists(response_dict, "visibility")
+  weather_data["wind_speed"] = check_data_exists(response_dict["wind"], "speed")
+  weather_data["wind_deg"] = check_data_exists(response_dict["wind"], "deg")
+  weather_data["wind_gust"] = check_data_exists(response_dict["wind"], "gust")
+  weather_data["current_time"] = check_time_exists(response_dict, "dt")
+  weather_data["sunrise"] = check_time_exists(response_dict["sys"], "sunrise")
+  weather_data["sunset"] = check_time_exists(response_dict["sys"], "sunset")
+
+  df = pandas.DataFrame.from_dict(weather_data, orient="index", columns=[response_dict["name"]])
+  return df
+
+def make_spreadsheet(df):
+  print(df)
 
 def main():
   lon, lat = get_location_info()
-  print(lon, lat)
+  print()
+  df = get_weather_data(lon, lat)
+  make_spreadsheet(df)
 
 if __name__ == "__main__":
   main()
